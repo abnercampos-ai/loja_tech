@@ -121,6 +121,7 @@ select * from fornecedor;
 select * from categoria;
 select * from produto;
 select * from estoque;
+select * from pedido;
 select * from item_pedido;
 select * from  pagamento;
  
@@ -449,11 +450,51 @@ INSERT INTO categoria (id_categoria, nome, descricao) VALUES
 (7, 'Redes e Conectividade', 'Roteadores Wi-Fi, switches e equipamentos de rede.'),
 (10, 'Impressão e Digitalização', 'Impressoras multifuncionais e suprimentos de impressão');
 
-INSERT INTO estoque (id_produto, quantidade, estoque_minimo, ultima_atualizacao) VALUES
-(1, 42, 5, '2026-08-26 14:30:00'),
-(2, 18, 5, '2026-08-26 14:30:00'),
-(3, 7, 5, '2026-08-26 14:30:00'),
-(4, 25, 5, '2026-08-26 14:30:00'),
-(5, 11, 5, '2026-08-26 14:30:00');
+USE nome_do_seu_banco; -- Substitua pelo nome real do seu banco de dados
+
+CREATE TABLE pedido (
+    id_pedido INT AUTO_INCREMENT PRIMARY KEY,
+    id_cliente INT NOT NULL,
+    id_funcionario INT NOT NULL,
+    data_pedido DATETIME NOT NULL,
+    status VARCHAR(30) NOT NULL,
+    valor_total DECIMAL(10, 2) NOT NULL
+);
+
+INSERT INTO pedido (id_cliente, id_funcionario, data_pedido, status, valor_total) VALUES
+(1, 3, '2026-08-10 10:15:00', 'Concluído', 3258.08),
+(2, 1, '2026-08-12 14:30:00', 'Concluído', 1925.20),
+(5, 4, '2026-08-20 09:00:00', 'Processando', 590.68),
+(3, 2, '2026-08-25 16:45:00', 'Pendente', 4904.71),
+(4, 1, '2026-08-26 11:20:00', 'Pendente', 259.82);
+    
+-- Garante que um mesmo produto não seja inserido mais de uma vez no mesmo pedido
+ALTER TABLE item_pedido 
+ADD CONSTRAINT uk_pedido_produto UNIQUE (id_pedido, id_produto);
+
+-- Inserção dos dados evitando registros duplicados (usando INSERT IGNORE)
+insert INTO item_pedido (id_pedido, id_produto, quantidade, preco_unitario, desconto) VALUES
+(1, 2, 3, 40.28, 0.00),
+(1, 5, 1, 3217.80, 50.00),
+(2, 11, 2, 1757.45, 100.00),
+(2, 18, 1, 167.75, 0.00),
+(3, 1, 1, 570.68, 20.00),
+(3, 12, 4, 178.87, 10.00),
+(4, 28, 1, 917.24, 0.00),
+(4, 30, 2, 3987.47, 150.00),
+(5, 45, 1, 259.82, 0.00),
+(5, 10, 1, 1114.12, 14.12);
+
+-- Garante que cada pedido possua apenas um registro de pagamento principal
+ALTER TABLE pagamento 
+ADD CONSTRAINT uk_pagamento_pedido UNIQUE (id_pedido);
+
+-- Inserção de dados evitando registros duplicados
+INSERT IGNORE INTO pagamento (id_pedido, data_pagamento, valor, forma_pagamento, status) VALUES
+(1, '2026-08-10 10:16:30', 3258.08, 'Cartão de Crédito', 'Aprovado'),
+(2, '2026-08-12 14:31:10', 1925.20, 'Pix', 'Aprovado'),
+(3, '2026-08-20 09:02:00', 590.68, 'Boleto Bancário', 'Pendente'),
+(4, '2026-08-25 16:46:00', 4904.71, 'Cartão de Crédito', 'Pendente'),
+(5, '2026-08-26 11:21:15', 259.82, 'Pix', 'Cancelado');
 
 
